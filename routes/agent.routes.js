@@ -8,7 +8,6 @@ const bcrypt = require('bcrypt'); // Added bcrypt import
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
     const agent = await Agent.findOne({ email });
     if (!agent) {
       return res.status(401).json({ message: 'Invalid credentials' });
