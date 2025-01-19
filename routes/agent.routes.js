@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Agent = require('../models/Agent');
-const bcrypt = require('bcrypt'); // Added bcrypt import
+const bcrypt = require('bcryptjs'); // Changed from bcrypt to bcryptjs
 
 // Agent authentication
 router.post('/login', async (req, res) => {
