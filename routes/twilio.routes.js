@@ -47,7 +47,7 @@ router.post('/twiml', (req, res) => {
   twiml.dial({
     callerId: process.env.TWILIO_PHONE_NUMBER,
     record: 'record-from-answer',
-    recordingStatusCallback: `${process.env.TWILIO_TWIML_BIN_URL}/api/twilio/recording-status`,
+    recordingStatusCallback: `${process.env.BASE_URL}/api/twilio/recording-status`,
     recordingStatusCallbackMethod: 'POST',
     answerOnBridge: true
   }, req.body.To); // Note: Twilio sends the 'To' parameter with capital T
@@ -66,10 +66,10 @@ router.post('/initiate-call', async (req, res) => {
 
     // Make the call using the TwiML endpoint
     const call = await client.calls.create({
-      url: `${process.env.TWILIO_TWIML_BIN_URL}/api/twilio/twiml`,
+      url: `${process.env.BASE_URL}/api/twilio/twiml`,
       to: formattedNumber,
       from: process.env.TWILIO_PHONE_NUMBER,
-      statusCallback: `${process.env.TWILIO_TWIML_BIN_URL}/api/twilio/call-status`,
+      statusCallback: `${process.env.BASE_URL}/api/twilio/call-status`,
       statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
       statusCallbackMethod: 'POST'
     });
@@ -94,6 +94,7 @@ router.post('/call-status', async (req, res) => {
       { status: CallStatus.toLowerCase() }
     );
 
+    // Handle call completion states
     if (['completed', 'failed', 'busy', 'no-answer'].includes(CallStatus.toLowerCase())) {
       const call = await Call.findOne({ callSid: CallSid });
       if (call && call.agent) {
