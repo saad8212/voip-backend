@@ -89,13 +89,6 @@ router.post('/initiate-call', async (req, res) => {
     // Format the phone number
     const formattedNumber = to.startsWith('0') ? '+' + to.substring(1) : to.startsWith('+') ? to : '+' + to;
 
-    // Create a new call record
-    const newCall = await Call.create({
-      agent: agentId,
-      to: formattedNumber,
-      status: 'initiating'
-    });
-
     // Make the call using the TwiML endpoint
     const call = await client.calls.create({
       url: `${process.env.BASE_URL}/api/twilio/twiml`,
@@ -106,9 +99,17 @@ router.post('/initiate-call', async (req, res) => {
       statusCallbackMethod: 'POST'
     });
 
-    // Update the call record with the SID
-    await Call.findByIdAndUpdate(newCall._id, {
-      callSid: call.sid
+    // Create a new call record with all required fields
+    const newCall = await Call.create({
+      callSid: call.sid,
+      direction: 'outbound',
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: formattedNumber,
+      status: 'queued',
+      agent: agentId,
+      type: 'voice',
+      duration: 0,
+      price: 0
     });
 
     // Update agent status
