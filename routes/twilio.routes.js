@@ -41,28 +41,60 @@ router.get('/token', async (req, res) => {
 
 // Generate TwiML for outbound calls
 router.post('/twiml', (req, res) => {
-  const twiml = new VoiceResponse();
-  
-  // Directly dial the number without any prompts
-  twiml.dial({
-    callerId: process.env.TWILIO_PHONE_NUMBER,
-    record: 'record-from-answer',
-    recordingStatusCallback: `${process.env.BASE_URL}/api/twilio/recording-status`,
-    recordingStatusCallbackMethod: 'POST',
-    answerOnBridge: true
-  }, req.body.To); // Note: Twilio sends the 'To' parameter with capital T
+  try {
+    const twiml = new VoiceResponse();
+    
+    // For outbound calls, directly connect without any prompts
+    const dial = twiml.dial({
+      callerId: process.env.TWILIO_PHONE_NUMBER,
+      record: 'record-from-answer',
+      recordingStatusCallback: `${process.env.BASE_URL}/api/twilio/recording-status`,
+      recordingStatusCallbackMethod: 'POST',
+      answerOnBridge: true,
+      timeout: 30
+    });
 
-  res.type('text/xml');
-  res.send(twiml.toString());
+    // If this is a client-to-phone call
+    if (req.body.To) {
+      dial.number(req.body.To);
+    }
+    // If this is a phone-to-client call
+    else if (req.body.Direction === 'inbound') {
+      dial.client(req.body.agentExtension || 'support');
+    }
+
+    res.type('text/xml');
+    res.send(twiml.toString());
+  } catch (error) {
+    console.error('Error generating TwiML:', error);
+    // Even in case of error, return a valid TwiML response
+    const twiml = new VoiceResponse();
+    twiml.say('An error occurred while processing your call. Please try again.');
+    res.type('text/xml');
+    res.send(twiml.toString());
+  }
 });
 
 // Initialize a new call
 router.post('/initiate-call', async (req, res) => {
   try {
-    const { to } = req.body;
+    const { to, agentId } = req.body;
+    
+    // Get agent information
+    const agent = await Agent.findById(agentId);
+    if (!agent) {
+      return res.status(404).json({ message: 'Agent not found' });
+    }
     
     // Format the phone number
     const formattedNumber = to.startsWith('0') ? '+' + to.substring(1) : to.startsWith('+') ? to : '+' + to;
+
+    // Create a new call record
+    const newCall = await Call.create({
+      agent: agentId,
+      to: formattedNumber,
+      status: 'initiating'
+    });
 
     // Make the call using the TwiML endpoint
     const call = await client.calls.create({
@@ -72,6 +104,17 @@ router.post('/initiate-call', async (req, res) => {
       statusCallback: `${process.env.BASE_URL}/api/twilio/call-status`,
       statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
       statusCallbackMethod: 'POST'
+    });
+
+    // Update the call record with the SID
+    await Call.findByIdAndUpdate(newCall._id, {
+      callSid: call.sid
+    });
+
+    // Update agent status
+    await Agent.findByIdAndUpdate(agentId, {
+      status: 'busy',
+      currentCall: newCall._id
     });
 
     res.json({ 
