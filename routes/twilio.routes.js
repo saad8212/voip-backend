@@ -63,15 +63,26 @@ router.post('/twiml', (req, res) => {
       dial.client(req.body.agentExtension || 'support');
     }
 
-    res.type('text/xml');
-    res.send(twiml.toString());
+    // Set proper XML headers
+    res.header('Cache-Control', 'no-cache');
+    res.header('Content-Type', 'text/xml; charset=utf-8');
+    
+    // Get TwiML and ensure XML declaration is first
+    const twimlString = twiml.toString();
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>\n${twimlString}`;
+    
+    console.log('Sending TwiML response:', xmlResponse);
+    res.send(xmlResponse);
   } catch (error) {
     console.error('Error generating TwiML:', error);
     // Even in case of error, return a valid TwiML response
     const twiml = new VoiceResponse();
     twiml.say('An error occurred while processing your call. Please try again.');
-    res.type('text/xml');
-    res.send(twiml.toString());
+    
+    res.header('Cache-Control', 'no-cache');
+    res.header('Content-Type', 'text/xml; charset=utf-8');
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>\n${twiml.toString()}`;
+    res.send(xmlResponse);
   }
 });
 
@@ -151,16 +162,20 @@ router.post('/call-status', async (req, res) => {
 
     console.log(`Call ${CallSid} status updated to: ${CallStatus}`);
     
-    // Return empty TwiML response
+    // Return empty TwiML response with proper headers
     const twiml = new VoiceResponse();
-    res.type('text/xml');
-    res.send(twiml.toString());
+    res.header('Cache-Control', 'no-cache');
+    res.header('Content-Type', 'text/xml; charset=utf-8');
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>\n${twiml.toString()}`;
+    res.send(xmlResponse);
   } catch (error) {
     console.error('Error updating call status:', error);
     // Even in case of error, return a valid TwiML response
     const twiml = new VoiceResponse();
-    res.type('text/xml');
-    res.send(twiml.toString());
+    res.header('Cache-Control', 'no-cache');
+    res.header('Content-Type', 'text/xml; charset=utf-8');
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>\n${twiml.toString()}`;
+    res.send(xmlResponse);
   }
 });
 
@@ -170,16 +185,19 @@ router.post('/recording-status', async (req, res) => {
     const { RecordingSid, RecordingStatus, RecordingUrl } = req.body;
     console.log(`Recording ${RecordingSid} status: ${RecordingStatus}, URL: ${RecordingUrl}`);
     
-    // Return empty TwiML response
+    // Return empty TwiML response with proper headers
     const twiml = new VoiceResponse();
-    res.type('text/xml');
-    res.send(twiml.toString());
+    res.header('Cache-Control', 'no-cache');
+    res.header('Content-Type', 'text/xml; charset=utf-8');
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>\n${twiml.toString()}`;
+    res.send(xmlResponse);
   } catch (error) {
-    console.error('Error handling recording status:', error);
-    // Even in case of error, return a valid TwiML response
+    console.error('Error in recording status:', error);
     const twiml = new VoiceResponse();
-    res.type('text/xml');
-    res.send(twiml.toString());
+    res.header('Cache-Control', 'no-cache');
+    res.header('Content-Type', 'text/xml; charset=utf-8');
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>\n${twiml.toString()}`;
+    res.send(xmlResponse);
   }
 });
 
