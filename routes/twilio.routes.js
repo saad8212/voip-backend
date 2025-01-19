@@ -106,18 +106,37 @@ router.post('/call-status', async (req, res) => {
     }
 
     console.log(`Call ${CallSid} status updated to: ${CallStatus}`);
-    res.sendStatus(200);
+    
+    // Return empty TwiML response
+    const twiml = new VoiceResponse();
+    res.type('text/xml');
+    res.send(twiml.toString());
   } catch (error) {
     console.error('Error updating call status:', error);
-    res.status(500).json({ message: 'Error updating call status' });
+    // Even in case of error, return a valid TwiML response
+    const twiml = new VoiceResponse();
+    res.type('text/xml');
+    res.send(twiml.toString());
   }
 });
 
 // Handle recording status updates
 router.post('/recording-status', async (req, res) => {
-  const { RecordingSid, RecordingStatus, RecordingUrl } = req.body;
-  console.log(`Recording ${RecordingSid} status: ${RecordingStatus}, URL: ${RecordingUrl}`);
-  res.sendStatus(200);
+  try {
+    const { RecordingSid, RecordingStatus, RecordingUrl } = req.body;
+    console.log(`Recording ${RecordingSid} status: ${RecordingStatus}, URL: ${RecordingUrl}`);
+    
+    // Return empty TwiML response
+    const twiml = new VoiceResponse();
+    res.type('text/xml');
+    res.send(twiml.toString());
+  } catch (error) {
+    console.error('Error handling recording status:', error);
+    // Even in case of error, return a valid TwiML response
+    const twiml = new VoiceResponse();
+    res.type('text/xml');
+    res.send(twiml.toString());
+  }
 });
 
 // End a call
