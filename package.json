@@ -19,7 +19,7 @@
     "mongoose": "^6.8.0",
     "nodemon": "^3.1.5",
     "socket.io": "^4.7.2",
-    "twilio": "^4.19.0"
+    "twilio": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.5"
