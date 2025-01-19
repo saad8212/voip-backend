@@ -25,12 +25,12 @@ const CallSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['queued', 'ringing', 'in-progress', 'completed', 'failed', 'busy', 'no-answer', 'canceled', 'on-hold', 'transferring'],
+    enum: ['queued', 'ringing', 'in-progress', 'initiating', 'completed', 'failed', 'busy', 'no-answer', 'canceled', 'on-hold', 'transferring'],
     default: 'queued'
   },
   type: {
     type: String,
-    enum: ['direct', 'ivr', 'queue', 'transfer'],
+    enum: ['direct', 'ivr', 'queue', 'transfer', 'voice', 'call'],
     default: 'direct'
   },
   agent: {
